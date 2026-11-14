@@ -130,7 +130,7 @@ describe('city:yield', (): void => {
         cities = [] as City[],
         units = [] as Unit[],
         improvements = [] as unknown[],
-        exemption = null as 'police' | 'suffrage' | null,
+        exemption = null as 'police' | 'suffrage' | 'both' | null,
       } = {}
     ): Yield[] => {
       const registry = new RuleRegistry(),
@@ -165,13 +165,13 @@ describe('city:yield', (): void => {
           {
             cityImprovementRegistry: {
               getByCity: () =>
-                exemption === 'police'
+                exemption === 'police' || exemption === 'both'
                   ? [Object.create(PoliceStation.prototype)]
                   : [],
             } as any,
             wonderRegistry: {
               getByPlayer: () =>
-                exemption === 'suffrage'
+                exemption === 'suffrage' || exemption === 'both'
                   ? [
                       Object.assign(Object.create(WomensSuffrage.prototype), {
                         city: () => ({ destroyed: () => false }),
@@ -288,7 +288,7 @@ describe('city:yield', (): void => {
       ],
       military = (
         Current: typeof Government,
-        exemption: 'police' | 'suffrage' | null
+        exemption: 'police' | 'suffrage' | 'both' | null
       ): number[] =>
         yieldsOf(city, { level: 0, Current, units, cities: [city], exemption })
           .filter((cityYield) => cityYield instanceof MilitaryUnhappiness)
@@ -296,6 +296,8 @@ describe('city:yield', (): void => {
 
     expect(military(Democracy, 'police')).eql([1, 1, 1]);
     expect(military(Democracy, 'suffrage')).eql([1, 1, 1]);
+    // Both still take 1 off, not 2.
+    expect(military(Democracy, 'both')).eql([1, 1, 1]);
     expect(military(Republic, 'police')).eql([]);
     expect(military(Republic, 'suffrage')).eql([]);
   });

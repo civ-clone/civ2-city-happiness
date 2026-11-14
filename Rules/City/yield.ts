@@ -199,25 +199,30 @@ export const getRules: (
     ),
     // A Police Station in the city, or its player's Women's Suffrage, takes `policeStationExemption` off each unit's
     //  share: one test, so the two never stack (`city_calc_trade_happiness`'s `unhappy_mult`).
-    perUnit = (city: City): number => {
+    share = (city: City): number => {
       try {
-        const share = militaryUnhappinessPerUnit(
+        return militaryUnhappinessPerUnit(
           militaryUnhappinessTable,
           playerGovernmentRegistry.getByPlayer(city.player())
         );
-
-        return share > 0 &&
-          cityHasImprovementOrWonder(
-            city,
-            PoliceStation,
-            WomensSuffrage,
-            improvementOrWonderRegistries
-          )
-          ? Math.max(share - policeStationExemption, 0)
-          : share;
       } catch (e) {
         return 0;
       }
+    },
+    // A Police Station in the city, or its player's Women's Suffrage, takes `policeStationExemption` off each unit's
+    //  share: one test, so the two never stack (`city_calc_trade_happiness`'s `unhappy_mult`).
+    perUnit = (city: City): number => {
+      const perUnit = share(city);
+
+      return perUnit > 0 &&
+        cityHasImprovementOrWonder(
+          city,
+          PoliceStation,
+          WomensSuffrage,
+          improvementOrWonderRegistries
+        )
+        ? Math.max(perUnit - policeStationExemption, 0)
+        : perUnit;
     },
     free = (city: City): number =>
       freeAggressiveUnits(playerGovernmentRegistry.getByPlayer(city.player()));

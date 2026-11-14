@@ -89,17 +89,22 @@ const getRules = (cityGrowthRegistry = CityGrowthRegistry_1.instance, playerGove
     }, empireSizeOnce = once(empireSize), aggressiveOnce = once((city) => new Set((0, militaryUnhappiness_1.aggressiveUnits)(city, aggressive, unitRegistry))), 
     // A Police Station in the city, or its player's Women's Suffrage, takes `policeStationExemption` off each unit's
     //  share: one test, so the two never stack (`city_calc_trade_happiness`'s `unhappy_mult`).
-    perUnit = (city) => {
+    share = (city) => {
         try {
-            const share = (0, militaryUnhappiness_1.militaryUnhappinessPerUnit)(militaryUnhappiness_2.militaryUnhappinessTable, playerGovernmentRegistry.getByPlayer(city.player()));
-            return share > 0 &&
-                (0, hasImprovementOrWonder_1.cityHasImprovementOrWonder)(city, PoliceStation_1.default, WomensSuffrage_1.default, improvementOrWonderRegistries)
-                ? Math.max(share - militaryUnhappiness_2.policeStationExemption, 0)
-                : share;
+            return (0, militaryUnhappiness_1.militaryUnhappinessPerUnit)(militaryUnhappiness_2.militaryUnhappinessTable, playerGovernmentRegistry.getByPlayer(city.player()));
         }
         catch (e) {
             return 0;
         }
+    }, 
+    // A Police Station in the city, or its player's Women's Suffrage, takes `policeStationExemption` off each unit's
+    //  share: one test, so the two never stack (`city_calc_trade_happiness`'s `unhappy_mult`).
+    perUnit = (city) => {
+        const perUnit = share(city);
+        return perUnit > 0 &&
+            (0, hasImprovementOrWonder_1.cityHasImprovementOrWonder)(city, PoliceStation_1.default, WomensSuffrage_1.default, improvementOrWonderRegistries)
+            ? Math.max(perUnit - militaryUnhappiness_2.policeStationExemption, 0)
+            : perUnit;
     }, free = (city) => (0, militaryUnhappiness_2.freeAggressiveUnits)(playerGovernmentRegistry.getByPlayer(city.player()));
     return [
         // OpenCiv2 `src/auto/city.cpp` `city_calc_trade_happiness`, richardpenman/civ2@49f26ec, stage 0.
