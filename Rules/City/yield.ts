@@ -197,8 +197,7 @@ export const getRules: (
       (city: City): Set<Unit> =>
         new Set(aggressiveUnits(city, aggressive, unitRegistry))
     ),
-    // A Police Station in the city, or its player's Women's Suffrage, takes `policeStationExemption` off each unit's
-    //  share: one test, so the two never stack (`city_calc_trade_happiness`'s `unhappy_mult`).
+    // Each aggressive unit's share under the player's government (civ2-government's table).
     share = (city: City): number => {
       try {
         return militaryUnhappinessPerUnit(

@@ -87,8 +87,7 @@ const getRules = (cityGrowthRegistry = CityGrowthRegistry_1.instance, playerGove
             return known.get(yields);
         };
     }, empireSizeOnce = once(empireSize), aggressiveOnce = once((city) => new Set((0, militaryUnhappiness_1.aggressiveUnits)(city, aggressive, unitRegistry))), 
-    // A Police Station in the city, or its player's Women's Suffrage, takes `policeStationExemption` off each unit's
-    //  share: one test, so the two never stack (`city_calc_trade_happiness`'s `unhappy_mult`).
+    // Each aggressive unit's share under the player's government (civ2-government's table).
     share = (city) => {
         try {
             return (0, militaryUnhappiness_1.militaryUnhappinessPerUnit)(militaryUnhappiness_2.militaryUnhappinessTable, playerGovernmentRegistry.getByPlayer(city.player()));
