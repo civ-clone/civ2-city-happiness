@@ -36,7 +36,7 @@
   "dependencies": {
     "@civ-clone/base-city-celebration-yields": "^0.1.0",
     "@civ-clone/base-city-happiness": "^0.1.1",
-    "@civ-clone/base-city-happiness-status": "github:civ-clone/base-city-happiness-status#feat/status-turn",
+    "@civ-clone/base-city-happiness-status": "^0.1.1",
     "@civ-clone/base-city-yield-happiness": "^0.1.0",
     "@civ-clone/base-city-yield-luxuries": "^0.1.0",
     "@civ-clone/base-city-yield-luxury-happiness": "^0.1.0",
@@ -50,7 +50,7 @@
     "@civ-clone/base-tile-improvement-pollution": "^0.1.0",
     "@civ-clone/base-unit-role": "^0.1.0",
     "@civ-clone/base-unit-type-air": "^0.1.0",
-    "@civ-clone/civ2-city": "github:civ-clone/civ2-city#feat/civ2-city",
+    "@civ-clone/civ2-city": "github:civ-clone/civ2-city",
     "@civ-clone/civ2-difficulty": "github:civ-clone/civ2-difficulty",
     "@civ-clone/civ2-government": "github:civ-clone/civ2-government",
     "@civ-clone/civ2-rules": "github:civ-clone/civ2-rules",
