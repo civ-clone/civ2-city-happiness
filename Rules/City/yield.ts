@@ -166,6 +166,23 @@ export const getRules: (
       cityRegistry,
       tileImprovementRegistry
     ),
+    // Worked out once a `yields()` call: its rules are all given the same `yields` array, while it's being filled.
+    once = <T>(compute: (city: City) => T) => {
+      const known = new WeakMap<Yield[], T>();
+
+      return (city: City, yields: Yield[]): T => {
+        if (!known.has(yields)) {
+          known.set(yields, compute(city));
+        }
+
+        return known.get(yields)!;
+      };
+    },
+    empireSizeOnce = once(empireSize),
+    aggressiveOnce = once(
+      (city: City): Set<Unit> =>
+        new Set(aggressiveUnits(city, aggressive, unitRegistry))
+    ),
     perUnit = (city: City): number => {
       try {
         return militaryUnhappinessPerUnit(
@@ -191,15 +208,18 @@ export const getRules: (
 
     new CityYield(
       'civ2-city-happiness:city/yield/empire-size',
-      new Criterion((city: City): boolean => empireSize(city) > 0),
       new Criterion(
-        (city: City): boolean =>
-          bornUnhappy(city, empireSize(city)) > bornUnhappy(city)
+        (city: City, yields: Yield[]): boolean =>
+          empireSizeOnce(city, yields) > 0
+      ),
+      new Criterion(
+        (city: City, yields: Yield[]): boolean =>
+          bornUnhappy(city, empireSizeOnce(city, yields)) > bornUnhappy(city)
       ),
       new Effect(
-        (city: City): Yield =>
+        (city: City, yields: Yield[]): Yield =>
           new PopulationUnhappiness(
-            bornUnhappy(city, empireSize(city)) - bornUnhappy(city),
+            bornUnhappy(city, empireSizeOnce(city, yields)) - bornUnhappy(city),
             'empire-size'
           )
       )
@@ -211,18 +231,19 @@ export const getRules: (
       'civ2-city-happiness:city/yield/military-unhappiness',
       new Criterion((city: City): boolean => perUnit(city) > 0),
       new Criterion(
-        (city: City): boolean =>
-          aggressiveUnits(city, aggressive, unitRegistry).length > free(city)
+        (city: City, yields: Yield[]): boolean =>
+          aggressiveOnce(city, yields).size > free(city)
       ),
-      new Effect(
-        (city: City): Yield[] =>
-          militaryUnhappiness(
-            city,
-            perUnit(city),
-            aggressive,
-            unitRegistry
-          ).slice(free(city)) as Yield[]
-      )
+      new Effect((city: City, yields: Yield[]): Yield[] => {
+        const units = aggressiveOnce(city, yields);
+
+        return militaryUnhappiness(
+          city,
+          perUnit(city),
+          (unit: Unit): boolean => units.has(unit),
+          unitRegistry
+        ).slice(free(city)) as Yield[];
+      })
     ),
   ];
 };

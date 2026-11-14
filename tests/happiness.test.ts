@@ -35,6 +35,7 @@ import City from '@civ-clone/core-city/City';
 import CityYield from '@civ-clone/core-city/Rules/Yield';
 import CivilDisorder from '@civ-clone/core-city-happiness/Rules/CivilDisorder';
 import Cost from '@civ-clone/core-city/Rules/Cost';
+import Airbase from '@civ-clone/base-tile-improvement-airbase/Airbase';
 import Fortress from '@civ-clone/base-tile-improvement-fortress/Fortress';
 import Government from '@civ-clone/core-government/Government';
 import RuleRegistry from '@civ-clone/core-rule/RuleRegistry';
@@ -125,8 +126,13 @@ describe('city:yield', (): void => {
     ): Yield[] => {
       const registry = new RuleRegistry(),
         cityRegistry = {
-          getByPlayer: () => cities,
-          indexOf: (city: City) => cities.indexOf(city),
+          getByPlayer: (player: unknown) =>
+            cities.filter((city) => city.player() === player),
+          indexOf: (city: City) => {
+            calls.indexOf++;
+
+            return cities.indexOf(city);
+          },
           getByTile: (tile: unknown) =>
             cities.find((city) => city.tile() === tile) ?? null,
         };
@@ -135,7 +141,13 @@ describe('city:yield', (): void => {
         ...yieldRules(
           { getByCity: () => ({ size: () => size }) } as any,
           governedBy(Current),
-          { getByCity: () => units } as any,
+          {
+            getByCity: () => {
+              calls.getByCity++;
+
+              return units;
+            },
+          } as any,
           cityRegistry as any,
           atLevel(level),
           playedBy(human),
@@ -147,7 +159,8 @@ describe('city:yield', (): void => {
       return registry.process(CityYield, city, []).flat();
     },
     total = (yields: Yield[], Type: typeof Yield): number =>
-      reduceYield(yields, Type);
+      reduceYield(yields, Type),
+    calls = { indexOf: 0, getByCity: 0 };
 
   it("makes the citizens past those born content unhappy, up to the city's size", (): void => {
     expect(total(yieldsOf(cityOf(human)), PopulationUnhappiness)).equal(2);
@@ -260,6 +273,54 @@ describe('city:yield', (): void => {
       aggressive([unitOf(Warrior, human, near)], [instanceOf(Fortress)])
     ).equal(0);
     expect(aggressive([unitOf(Warrior, human, near)], [])).equal(1);
+  });
+
+  it("counts a unit on a Fortress near another player's city, or on an Airbase near its own", (): void => {
+    const near = { distanceFrom: () => 2 },
+      theirs = cityOf(computer),
+      city = cityOf(human),
+      aggressive = (cities: City[], improvements: unknown[]): number =>
+        yieldsOf(city, {
+          level: 0,
+          Current: Democracy,
+          units: [unitOf(Warrior, human, near)],
+          cities,
+          improvements,
+        }).filter((cityYield) => cityYield instanceof MilitaryUnhappiness)
+          .length;
+
+    // `near` is 2 from every city: only the person's own makes the Fortress safe.
+    expect(aggressive([theirs], [instanceOf(Fortress)])).equal(1);
+    expect(aggressive([city], [instanceOf(Fortress)])).equal(0);
+    expect(aggressive([city], [instanceOf(Airbase)])).equal(1);
+  });
+
+  it("works out the empire size and the aggressive units once a city's yields", (): void => {
+    const city = cityOf(human),
+      away = { distanceFrom: () => 10 },
+      cities = [
+        ...new Array(7).fill(0).map(() => cityOf(human)),
+        city,
+        ...new Array(6).fill(0).map(() => cityOf(human)),
+      ];
+
+    calls.indexOf = 0;
+    calls.getByCity = 0;
+
+    // Deity, 14 cities under Democracy: 4 born unhappy, and a limit of 10, so (14 - 10 + 7) / 10 = 1 more.
+    const yields = yieldsOf(city, {
+      level: 5,
+      Current: Democracy,
+      cities,
+      units: [unitOf(Warrior, human, away)],
+    });
+
+    expect(total(yields, PopulationUnhappiness)).equal(5);
+    expect(yields.some((cityYield) => cityYield instanceof MilitaryUnhappiness))
+      .true;
+    expect(calls.indexOf).equal(1);
+    // Once for the aggressive units, and once more as the base library lists the city's units to make the yields.
+    expect(calls.getByCity).equal(2);
   });
 });
 

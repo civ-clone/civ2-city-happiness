@@ -69,7 +69,17 @@ const getRules = (cityGrowthRegistry = CityGrowthRegistry_1.instance, playerGove
         }
         const world = city.tile().map(), limit = (0, happiness_1.empireSizeLimit)(government, (0, level_1.levelOf)(gameDifficultyRegistry), (0, mapSize_1.default)(world.width() * world.height()) === 'large');
         return (0, happiness_1.empireSizeUnhappiness)(cityRegistry.getByPlayer(player).length, Math.max(cityRegistry.indexOf(city), 0), limit);
-    }, aggressive = (0, exports.isAggressive)(ruleRegistry, cityRegistry, tileImprovementRegistry), perUnit = (city) => {
+    }, aggressive = (0, exports.isAggressive)(ruleRegistry, cityRegistry, tileImprovementRegistry), 
+    // Worked out once a `yields()` call: its rules are all given the same `yields` array, while it's being filled.
+    once = (compute) => {
+        const known = new WeakMap();
+        return (city, yields) => {
+            if (!known.has(yields)) {
+                known.set(yields, compute(city));
+            }
+            return known.get(yields);
+        };
+    }, empireSizeOnce = once(empireSize), aggressiveOnce = once((city) => new Set((0, militaryUnhappiness_1.aggressiveUnits)(city, aggressive, unitRegistry))), perUnit = (city) => {
         try {
             return (0, militaryUnhappiness_1.militaryUnhappinessPerUnit)(militaryUnhappiness_2.militaryUnhappinessTable, playerGovernmentRegistry.getByPlayer(city.player()));
         }
@@ -80,10 +90,13 @@ const getRules = (cityGrowthRegistry = CityGrowthRegistry_1.instance, playerGove
     return [
         // OpenCiv2 `src/auto/city.cpp` `city_calc_trade_happiness`, richardpenman/civ2@49f26ec, stage 0.
         new Yield_1.default('civ2-city-happiness:city/yield/population', new Criterion_1.default((city) => bornUnhappy(city) > 0), new Effect_1.default((city) => new Yields_1.PopulationUnhappiness(bornUnhappy(city)))),
-        new Yield_1.default('civ2-city-happiness:city/yield/empire-size', new Criterion_1.default((city) => empireSize(city) > 0), new Criterion_1.default((city) => bornUnhappy(city, empireSize(city)) > bornUnhappy(city)), new Effect_1.default((city) => new Yields_1.PopulationUnhappiness(bornUnhappy(city, empireSize(city)) - bornUnhappy(city), 'empire-size'))),
+        new Yield_1.default('civ2-city-happiness:city/yield/empire-size', new Criterion_1.default((city, yields) => empireSizeOnce(city, yields) > 0), new Criterion_1.default((city, yields) => bornUnhappy(city, empireSizeOnce(city, yields)) > bornUnhappy(city)), new Effect_1.default((city, yields) => new Yields_1.PopulationUnhappiness(bornUnhappy(city, empireSizeOnce(city, yields)) - bornUnhappy(city), 'empire-size'))),
         // Stage 3: each aggressive unit makes `perUnit` citizens unhappy (civ2-government's table), but under the Republic
         //  the first.
-        new Yield_1.default('civ2-city-happiness:city/yield/military-unhappiness', new Criterion_1.default((city) => perUnit(city) > 0), new Criterion_1.default((city) => (0, militaryUnhappiness_1.aggressiveUnits)(city, aggressive, unitRegistry).length > free(city)), new Effect_1.default((city) => (0, militaryUnhappiness_1.militaryUnhappiness)(city, perUnit(city), aggressive, unitRegistry).slice(free(city)))),
+        new Yield_1.default('civ2-city-happiness:city/yield/military-unhappiness', new Criterion_1.default((city) => perUnit(city) > 0), new Criterion_1.default((city, yields) => aggressiveOnce(city, yields).size > free(city)), new Effect_1.default((city, yields) => {
+            const units = aggressiveOnce(city, yields);
+            return (0, militaryUnhappiness_1.militaryUnhappiness)(city, perUnit(city), (unit) => units.has(unit), unitRegistry).slice(free(city));
+        })),
     ];
 };
 exports.getRules = getRules;

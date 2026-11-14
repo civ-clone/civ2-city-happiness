@@ -31,6 +31,8 @@ and military unhappiness tables by government, and the revolution, are civ2-gove
 - **Celebrating's corruption step** (civ2-city).
 - **Content from improvements and wonders**, the Police Station and Women's Suffrage, the Courthouse's and Palace's
   happy citizen under Democracy: civ2-city-improvement and civ2-wonder.
+- **City numbers:** empire size counts a city's place among every player's cities in founding order; Civ2 reuses a
+  destroyed city's slot for the next city founded, so its numbers can differ once a city is gone.
 - **Palace floor:** the content limit's floor of 2 with a Palace and no units abroad never changes the outcome at
   @COSMIC's 7, so it isn't modelled.
 - **`GovernmentContent`** (Fundamentalism's content) is a yield class of this package's own until another rule set
