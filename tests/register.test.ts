@@ -1,12 +1,14 @@
 import { Game } from '@civ-clone/core-game';
 import { expect } from 'chai';
-import register from '../index';
+import registerAdditionalData from '../registerAdditionalData';
+import register from '../registerRules';
 
 describe('register', (): void => {
   it("registers only civ2-city-happiness's rules, each with its own id, and the citizens' moods", (): void => {
     const game = new Game();
 
     register(game);
+    registerAdditionalData(game);
 
     const ids = game.rules.entries().map((rule) => rule.id());
 
