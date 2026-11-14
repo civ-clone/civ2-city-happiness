@@ -166,11 +166,16 @@ export const getRules: (
       cityRegistry,
       tileImprovementRegistry
     ),
-    // Worked out once a `yields()` call: its rules are all given the same `yields` array, while it's being filled.
+    // Worked out once a `yields()` call: its rules are all given the same `yields` array, while it's being filled. A
+    //  caller that passes no array gets it worked out afresh.
     once = <T>(compute: (city: City) => T) => {
       const known = new WeakMap<Yield[], T>();
 
-      return (city: City, yields: Yield[]): T => {
+      return (city: City, yields?: Yield[]): T => {
+        if (!Array.isArray(yields)) {
+          return compute(city);
+        }
+
         if (!known.has(yields)) {
           known.set(yields, compute(city));
         }

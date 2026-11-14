@@ -50,7 +50,7 @@ import isHuman from '@civ-clone/civ2-difficulty/isHuman';
 //  `city_process_disorder`, richardpenman/civ2@49f26ec):
 //  - a person's Democracy falls into Anarchy when a city is in disorder for a second turn running;
 //  - a celebration ends when its conditions fail, in disorder too, and is only announced to have ended outside
-//    disorder and Anarchy (`if (human && civ_gov != 0 && !(flags & CITYF_DISORDER)) "WEDONTLOVEKING"`).
+//    disorder and Anarchy, and only to a person.
 //  Rapture growth comes later (civ2-city-happiness's README).
 export const getRules: (
   cityRegistry?: CityRegistry,

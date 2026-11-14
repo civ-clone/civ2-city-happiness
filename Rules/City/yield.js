@@ -70,10 +70,14 @@ const getRules = (cityGrowthRegistry = CityGrowthRegistry_1.instance, playerGove
         const world = city.tile().map(), limit = (0, happiness_1.empireSizeLimit)(government, (0, level_1.levelOf)(gameDifficultyRegistry), (0, mapSize_1.default)(world.width() * world.height()) === 'large');
         return (0, happiness_1.empireSizeUnhappiness)(cityRegistry.getByPlayer(player).length, Math.max(cityRegistry.indexOf(city), 0), limit);
     }, aggressive = (0, exports.isAggressive)(ruleRegistry, cityRegistry, tileImprovementRegistry), 
-    // Worked out once a `yields()` call: its rules are all given the same `yields` array, while it's being filled.
+    // Worked out once a `yields()` call: its rules are all given the same `yields` array, while it's being filled. A
+    //  caller that passes no array gets it worked out afresh.
     once = (compute) => {
         const known = new WeakMap();
         return (city, yields) => {
+            if (!Array.isArray(yields)) {
+                return compute(city);
+            }
             if (!known.has(yields)) {
                 known.set(yields, compute(city));
             }

@@ -92,7 +92,12 @@ describe('data', (): void => {
 describe('city:yield', (): void => {
   const human = { name: 'human' },
     computer = { name: 'computer' },
-    centre = { name: 'centre', distanceFrom: () => 0 },
+    // A city's square is as far from a unit's square as the unit's square says it is from any city.
+    centre = {
+      name: 'centre',
+      distanceFrom: (other: { distanceFrom?: () => number }): number =>
+        other?.distanceFrom ? other.distanceFrom() : 0,
+    },
     world = (squares: number) => ({ width: () => squares, height: () => 1 }),
     cityOf = (player: unknown, mapSquares = 4000) => {
       const tile = { ...centre, map: () => world(mapSquares) };
@@ -293,6 +298,67 @@ describe('city:yield', (): void => {
     expect(aggressive([theirs], [instanceOf(Fortress)])).equal(1);
     expect(aggressive([city], [instanceOf(Fortress)])).equal(0);
     expect(aggressive([city], [instanceOf(Airbase)])).equal(1);
+  });
+
+  it('exempts a unit on a Fortress 3 from its own city, but not one 4 away', (): void => {
+    const city = cityOf(human),
+      aggressive = (distance: number): number =>
+        yieldsOf(city, {
+          level: 0,
+          Current: Democracy,
+          units: [unitOf(Warrior, human, { distanceFrom: () => distance })],
+          cities: [city],
+          improvements: [instanceOf(Fortress)],
+        }).filter((cityYield) => cityYield instanceof MilitaryUnhappiness)
+          .length;
+
+    expect(aggressive(3)).equal(0);
+    expect(aggressive(4)).equal(1);
+  });
+
+  it('works them out afresh for each call, and with no yields given', (): void => {
+    const city = cityOf(human),
+      cities = [...new Array(7).fill(0).map(() => cityOf(human)), city],
+      registry = new RuleRegistry(),
+      cityRegistry = {
+        getByPlayer: (player: unknown) =>
+          cities.filter((other) => other.player() === player),
+        indexOf: (other: City) => cities.indexOf(other),
+        getByTile: () => null,
+      };
+
+    registry.register(
+      ...yieldRules(
+        { getByCity: () => ({ size: () => 5 }) } as any,
+        governedBy(Despotism),
+        { getByCity: () => [] } as any,
+        cityRegistry as any,
+        atLevel(3),
+        playedBy(human),
+        { getByTile: () => [] } as any,
+        roles
+      )
+    );
+
+    const rule = registry
+        .entries()
+        .find(
+          (entry) => entry.id() === 'civ2-city-happiness:city/yield/empire-size'
+        )!,
+      empire = (): number =>
+        reduceYield(
+          registry.process(CityYield, city, []).flat() as Yield[],
+          PopulationUnhappiness
+        );
+
+    // 8 cities, the city at index 7, a limit of 8: (8 - 8 + 7) / 8 = 0; with 9: (9 - 8 + 7) / 8 = 1.
+    expect(empire()).equal(2);
+
+    cities.push(cityOf(human));
+
+    expect(empire()).equal(3);
+    expect(() => rule.validate(city)).not.throw();
+    expect((rule as any).validate(city)).true;
   });
 
   it("works out the empire size and the aggressive units once a city's yields", (): void => {

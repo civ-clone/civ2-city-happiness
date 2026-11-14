@@ -13,8 +13,8 @@ export const getRules = (
   pendingEffects: PendingEffectRegistry = pendingEffectRegistryInstance
 ): Captured[] => [
   // A captured city, taken by force or incited, starts out for its captor neither in disorder nor celebrating (OpenCiv2
-  //  `src/auto/city.cpp` `city_capture_aftermath`, richardpenman/civ2@49f26ec: `flags & 0xffffffc4` clears
-  //  `CITYF_DISORDER` and `CITYF_CELEBRATING`). Dropped rather than ended, so the captor isn't told order was restored
+  //  `src/auto/city.cpp` `city_capture_aftermath`, richardpenman/civ2@49f26ec, which clears both of the
+  //  city's flags). Dropped rather than ended, so the captor isn't told order was restored
   //  or the celebration is over. At `High`, ahead of the other packages' `Captured` rules that read the city's status.
   new Captured(
     'civ2-city-happiness:city/captured/forget-status',
