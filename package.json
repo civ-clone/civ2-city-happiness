@@ -51,7 +51,7 @@
     "@civ-clone/base-tile-improvement-pollution": "^0.1.0",
     "@civ-clone/base-unit-role": "^0.1.0",
     "@civ-clone/base-unit-type-air": "^0.1.0",
-    "@civ-clone/base-wonder": "github:civ-clone/base-wonder#feat/civ2-wonder-factories",
+    "@civ-clone/base-wonder": "^0.1.1",
     "@civ-clone/base-wonder-womenssuffrage": "^0.1.1",
     "@civ-clone/civ2-city": "github:civ-clone/civ2-city",
     "@civ-clone/civ2-difficulty": "github:civ-clone/civ2-difficulty",
