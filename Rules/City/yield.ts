@@ -51,6 +51,7 @@ import {
 import {
   freeAggressiveUnits,
   militaryUnhappinessTable,
+  policeStationExemption,
 } from '@civ-clone/civ2-government/militaryUnhappiness';
 import Air from '@civ-clone/base-unit-type-air/Air';
 import City from '@civ-clone/core-city/City';
@@ -62,6 +63,12 @@ import { PopulationUnhappiness } from '../../Yields';
 import Unit from '@civ-clone/core-unit/Unit';
 import Yield from '@civ-clone/core-yield/Yield';
 import governmentOf from '@civ-clone/civ2-city/lib/government';
+import {
+  ImprovementOrWonderRegistries,
+  cityHasImprovementOrWonder,
+} from '@civ-clone/base-wonder/lib/hasImprovementOrWonder';
+import PoliceStation from '@civ-clone/base-city-improvement-policestation/PoliceStation';
+import WomensSuffrage from '@civ-clone/base-wonder-womenssuffrage/WomensSuffrage';
 import { hasRole } from '@civ-clone/base-unit-role/roleOf';
 import { isA } from '@civ-clone/core-unit/traits';
 import isHuman from '@civ-clone/civ2-difficulty/isHuman';
@@ -117,7 +124,8 @@ export const getRules: (
   gameDifficultyRegistry?: GameDifficultyRegistry,
   clientRegistry?: ClientRegistry,
   tileImprovementRegistry?: TileImprovementRegistry,
-  ruleRegistry?: RuleRegistry
+  ruleRegistry?: RuleRegistry,
+  improvementOrWonderRegistries?: ImprovementOrWonderRegistries
 ) => CityYield[] = (
   cityGrowthRegistry: CityGrowthRegistry = cityGrowthRegistryInstance,
   playerGovernmentRegistry: PlayerGovernmentRegistry = playerGovernmentRegistryInstance,
@@ -126,7 +134,8 @@ export const getRules: (
   gameDifficultyRegistry: GameDifficultyRegistry = gameDifficultyRegistryInstance,
   clientRegistry: ClientRegistry = clientRegistryInstance,
   tileImprovementRegistry: TileImprovementRegistry = tileImprovementRegistryInstance,
-  ruleRegistry: RuleRegistry = ruleRegistryInstance
+  ruleRegistry: RuleRegistry = ruleRegistryInstance,
+  improvementOrWonderRegistries: ImprovementOrWonderRegistries = {}
 ): CityYield[] => {
   const size = (city: City): number =>
       cityGrowthRegistry.getByCity(city).size(),
@@ -188,12 +197,24 @@ export const getRules: (
       (city: City): Set<Unit> =>
         new Set(aggressiveUnits(city, aggressive, unitRegistry))
     ),
+    // A Police Station in the city, or its player's Women's Suffrage, takes `policeStationExemption` off each unit's
+    //  share: one test, so the two never stack (`city_calc_trade_happiness`'s `unhappy_mult`).
     perUnit = (city: City): number => {
       try {
-        return militaryUnhappinessPerUnit(
+        const share = militaryUnhappinessPerUnit(
           militaryUnhappinessTable,
           playerGovernmentRegistry.getByPlayer(city.player())
         );
+
+        return share > 0 &&
+          cityHasImprovementOrWonder(
+            city,
+            PoliceStation,
+            WomensSuffrage,
+            improvementOrWonderRegistries
+          )
+          ? Math.max(share - policeStationExemption, 0)
+          : share;
       } catch (e) {
         return 0;
       }

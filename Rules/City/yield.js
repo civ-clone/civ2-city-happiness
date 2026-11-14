@@ -21,6 +21,9 @@ const Effect_1 = require("@civ-clone/core-rule/Effect");
 const Fortress_1 = require("@civ-clone/base-tile-improvement-fortress/Fortress");
 const Yields_1 = require("../../Yields");
 const government_1 = require("@civ-clone/civ2-city/lib/government");
+const hasImprovementOrWonder_1 = require("@civ-clone/base-wonder/lib/hasImprovementOrWonder");
+const PoliceStation_1 = require("@civ-clone/base-city-improvement-policestation/PoliceStation");
+const WomensSuffrage_1 = require("@civ-clone/base-wonder-womenssuffrage/WomensSuffrage");
 const roleOf_1 = require("@civ-clone/base-unit-role/roleOf");
 const traits_1 = require("@civ-clone/core-unit/traits");
 const isHuman_1 = require("@civ-clone/civ2-difficulty/isHuman");
@@ -53,7 +56,7 @@ const isAggressive = (ruleRegistry, cityRegistry, tileImprovementRegistry) => (u
             .some((city) => city.tile().distanceFrom(tile) < happiness_1.fortressNearCity));
 };
 exports.isAggressive = isAggressive;
-const getRules = (cityGrowthRegistry = CityGrowthRegistry_1.instance, playerGovernmentRegistry = PlayerGovernmentRegistry_1.instance, unitRegistry = UnitRegistry_1.instance, cityRegistry = CityRegistry_1.instance, gameDifficultyRegistry = GameDifficultyRegistry_1.instance, clientRegistry = ClientRegistry_1.instance, tileImprovementRegistry = TileImprovementRegistry_1.instance, ruleRegistry = RuleRegistry_1.instance) => {
+const getRules = (cityGrowthRegistry = CityGrowthRegistry_1.instance, playerGovernmentRegistry = PlayerGovernmentRegistry_1.instance, unitRegistry = UnitRegistry_1.instance, cityRegistry = CityRegistry_1.instance, gameDifficultyRegistry = GameDifficultyRegistry_1.instance, clientRegistry = ClientRegistry_1.instance, tileImprovementRegistry = TileImprovementRegistry_1.instance, ruleRegistry = RuleRegistry_1.instance, improvementOrWonderRegistries = {}) => {
     const size = (city) => cityGrowthRegistry.getByCity(city).size(), content = (city) => (0, isHuman_1.default)(city.player(), clientRegistry)
         ? (0, happiness_1.humanContent)((0, level_1.levelOf)(gameDifficultyRegistry))
         : happiness_1.computerContent, 
@@ -83,9 +86,16 @@ const getRules = (cityGrowthRegistry = CityGrowthRegistry_1.instance, playerGove
             }
             return known.get(yields);
         };
-    }, empireSizeOnce = once(empireSize), aggressiveOnce = once((city) => new Set((0, militaryUnhappiness_1.aggressiveUnits)(city, aggressive, unitRegistry))), perUnit = (city) => {
+    }, empireSizeOnce = once(empireSize), aggressiveOnce = once((city) => new Set((0, militaryUnhappiness_1.aggressiveUnits)(city, aggressive, unitRegistry))), 
+    // A Police Station in the city, or its player's Women's Suffrage, takes `policeStationExemption` off each unit's
+    //  share: one test, so the two never stack (`city_calc_trade_happiness`'s `unhappy_mult`).
+    perUnit = (city) => {
         try {
-            return (0, militaryUnhappiness_1.militaryUnhappinessPerUnit)(militaryUnhappiness_2.militaryUnhappinessTable, playerGovernmentRegistry.getByPlayer(city.player()));
+            const share = (0, militaryUnhappiness_1.militaryUnhappinessPerUnit)(militaryUnhappiness_2.militaryUnhappinessTable, playerGovernmentRegistry.getByPlayer(city.player()));
+            return share > 0 &&
+                (0, hasImprovementOrWonder_1.cityHasImprovementOrWonder)(city, PoliceStation_1.default, WomensSuffrage_1.default, improvementOrWonderRegistries)
+                ? Math.max(share - militaryUnhappiness_2.policeStationExemption, 0)
+                : share;
         }
         catch (e) {
             return 0;

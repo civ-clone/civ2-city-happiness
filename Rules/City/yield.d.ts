@@ -8,6 +8,7 @@ import { TileImprovementRegistry } from '@civ-clone/core-tile-improvement/TileIm
 import { UnitRegistry } from '@civ-clone/core-unit/UnitRegistry';
 import CityYield from '@civ-clone/core-city/Rules/Yield';
 import Unit from '@civ-clone/core-unit/Unit';
+import { ImprovementOrWonderRegistries } from '@civ-clone/base-wonder/lib/hasImprovementOrWonder';
 /**
  * Whether a unit `city` supports is away making its citizens unhappy, as Civilization II counts it (OpenCiv2
  * `src/auto/city.cpp` `city_calc_unit_support`, richardpenman/civ2@49f26ec): it has an attack, isn't a unit of diplomacy
@@ -27,6 +28,7 @@ export declare const getRules: (
   gameDifficultyRegistry?: GameDifficultyRegistry,
   clientRegistry?: ClientRegistry,
   tileImprovementRegistry?: TileImprovementRegistry,
-  ruleRegistry?: RuleRegistry
+  ruleRegistry?: RuleRegistry,
+  improvementOrWonderRegistries?: ImprovementOrWonderRegistries
 ) => CityYield[];
 export default getRules;
