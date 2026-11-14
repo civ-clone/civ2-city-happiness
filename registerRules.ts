@@ -33,7 +33,13 @@ export const register = (game: Game): void => {
       game.difficulty,
       game.clients,
       game.tileImprovements,
-      game.rules
+      game.rules,
+      {
+        cityImprovementRegistry: game.cityImprovements,
+        wonderRegistry: game.wonders,
+        playerResearchRegistry: game.playerResearch,
+        requirementRegistry: game.requirements,
+      }
     ),
     ...playerAction(game.cities, game.pendingEffects),
     ...playerTurnStart(

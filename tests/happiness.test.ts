@@ -48,6 +48,9 @@ import { expect } from 'chai';
 import { reduceYield } from '@civ-clone/core-yield/lib/reduceYields';
 import { unitRole } from '@civ-clone/base-unit-role/Rules/UnitRoles';
 import yieldRules from '../Rules/City/yield';
+import PoliceStation from '@civ-clone/base-city-improvement-policestation/PoliceStation';
+import RequirementRegistry from '@civ-clone/core-requirement/RequirementRegistry';
+import WomensSuffrage from '@civ-clone/base-wonder-womenssuffrage/WomensSuffrage';
 
 class Warrior extends Unit {}
 class Bomber extends Air {}
@@ -127,6 +130,7 @@ describe('city:yield', (): void => {
         cities = [] as City[],
         units = [] as Unit[],
         improvements = [] as unknown[],
+        exemption = null as 'police' | 'suffrage' | 'both' | null,
       } = {}
     ): Yield[] => {
       const registry = new RuleRegistry(),
@@ -157,7 +161,27 @@ describe('city:yield', (): void => {
           atLevel(level),
           playedBy(human),
           { getByTile: () => improvements } as any,
-          roles
+          roles,
+          {
+            cityImprovementRegistry: {
+              getByCity: () =>
+                exemption === 'police' || exemption === 'both'
+                  ? [Object.create(PoliceStation.prototype)]
+                  : [],
+            } as any,
+            wonderRegistry: {
+              getByPlayer: () =>
+                exemption === 'suffrage' || exemption === 'both'
+                  ? [
+                      Object.assign(Object.create(WomensSuffrage.prototype), {
+                        city: () => ({ destroyed: () => false }),
+                      }),
+                    ]
+                  : [],
+            } as any,
+            playerResearchRegistry: { some: () => false } as any,
+            requirementRegistry: new RequirementRegistry(),
+          }
         )
       );
 
@@ -252,6 +276,30 @@ describe('city:yield', (): void => {
     [Anarchy, Despotism, Monarchy, Communism, Fundamentalism].forEach(
       (Current) => expect(military(Current), Current.name).eql([])
     );
+  });
+
+  it("takes 1 off each unit's share with a Police Station or its player's Women's Suffrage, once", (): void => {
+    const city = cityOf(human),
+      away = { distanceFrom: () => 10 },
+      units = [
+        unitOf(Warrior, human, away),
+        unitOf(Warrior, human, away),
+        unitOf(Warrior, human, away),
+      ],
+      military = (
+        Current: typeof Government,
+        exemption: 'police' | 'suffrage' | 'both' | null
+      ): number[] =>
+        yieldsOf(city, { level: 0, Current, units, cities: [city], exemption })
+          .filter((cityYield) => cityYield instanceof MilitaryUnhappiness)
+          .map((cityYield) => cityYield.value());
+
+    expect(military(Democracy, 'police')).eql([1, 1, 1]);
+    expect(military(Democracy, 'suffrage')).eql([1, 1, 1]);
+    // Both still take 1 off, not 2.
+    expect(military(Democracy, 'both')).eql([1, 1, 1]);
+    expect(military(Republic, 'police')).eql([]);
+    expect(military(Republic, 'suffrage')).eql([]);
   });
 
   it("counts units with an attack away from any city, bombers anywhere, but not fighters, diplomats, or a unit on a Fortress near its player's city", (): void => {

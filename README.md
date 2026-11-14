@@ -13,7 +13,8 @@ and military unhappiness tables by government, and the revolution, are civ2-gove
 - **Martial law:** under Anarchy, Despotism and Monarchy each unit with an attack in the city calms 1, under Communism
   2, up to 3 units. **Fundamentalism:** no unhappy citizens.
 - **Military unhappiness:** each aggressive unit makes 1 citizen unhappy under the Republic (but the first) and 2 under
-  Democracy. Aggressive: an attack, not diplomacy or trade, and an aircraft other than a fighter anywhere, or any
+  Democracy, 1 fewer with a Police Station in the city or its player's Women's Suffrage (one test, so they don't
+  stack). Aggressive: an attack, not diplomacy or trade, and an aircraft other than a fighter anywhere, or any
   other unit off every city's square and not on a Fortress within 3 of one of its player's cities.
 - **Civil disorder:** more unhappy citizens than happy ones. A person's Democracy falls into Anarchy on a city's second
   turn of it (`civil-disorder` revolution).
@@ -29,7 +30,7 @@ and military unhappiness tables by government, and the revolution, are civ2-gove
   order, not Civ2's clamp after each stage (M2c).
 - **Rapture growth:** a Republic's or Democracy's city celebrating for a second turn doesn't grow yet (M2c).
 - **Celebrating's corruption step** (civ2-city).
-- **Content from improvements and wonders**, the Police Station and Women's Suffrage, the Courthouse's and Palace's
+- **Content from improvements and wonders**, the Courthouse's and Palace's
   happy citizen under Democracy: civ2-city-improvement and civ2-wonder.
 - **City numbers:** empire size counts a city's place among every player's cities in founding order; Civ2 reuses a
   destroyed city's slot for the next city founded, so its numbers can differ once a city is gone.
