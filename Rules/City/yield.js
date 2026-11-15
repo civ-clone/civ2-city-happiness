@@ -60,9 +60,9 @@ const getRules = (cityGrowthRegistry = CityGrowthRegistry_1.instance, playerGove
     const size = (city) => cityGrowthRegistry.getByCity(city).size(), content = (city) => (0, isHuman_1.default)(city.player(), clientRegistry)
         ? (0, happiness_1.humanContent)((0, level_1.levelOf)(gameDifficultyRegistry))
         : happiness_1.computerContent, 
-    // Citizens beyond those born content are born unhappy, up to the whole city (those past it are angry citizens:
-    //  civ2-city-happiness's README).
-    bornUnhappy = (city, extra = 0) => Math.min(Math.max(size(city) - content(city) + extra, 0), size(city)), 
+    // Citizens beyond those born content are born unhappy, and any beyond the city's size are angry (`lib/stagedHappiness`:
+    //  `city_calc_trade_happiness` ~3766 counts them before `city_happy_clamp_stage` splits off the angry ones).
+    bornUnhappy = (city, extra = 0) => Math.max(size(city) - content(city) + extra, 0), 
     // A person's empire, under any government but Communism (`data/happiness`). A map counts as large by its squares,
     //  as civ2-rules' `mapSize` has it.
     empireSize = (city) => {
