@@ -10,10 +10,6 @@ import {
   SpecialistRegistry,
   instance as specialistRegistryInstance,
 } from '@civ-clone/core-city/SpecialistRegistry';
-import {
-  calculateCitizenState,
-  citizenSummary,
-} from '@civ-clone/base-city-happiness/lib/calculateCitizenState';
 import { celebrationHappy, celebrationMinimumSize } from '../../data/happiness';
 import { ANARCHY } from '@civ-clone/civ2-rules/data/governments';
 import CelebrateLeader from '@civ-clone/core-city-happiness/Rules/CelebrateLeader';
@@ -22,9 +18,10 @@ import Criterion from '@civ-clone/core-rule/Criterion';
 import Effect from '@civ-clone/core-rule/Effect';
 import Yield from '@civ-clone/core-yield/Yield';
 import governmentOf from '@civ-clone/civ2-city/lib/government';
+import stagedHappiness from '../../lib/stagedHappiness';
 
-// A city celebrates with no unhappy citizens, more than 2 citizens, at least half of them (rounded up) happy, and not
-//  under Anarchy (OpenCiv2 `src/auto/city.cpp` `city_process_disorder`, richardpenman/civ2@49f26ec).
+// A city celebrates, its happiness worked out in Civ2's stages (`lib/stagedHappiness`), with no unhappy citizens, more
+//  than 2 citizens, at least half of them (rounded up) happy, and not under Anarchy (OpenCiv2 `src/auto/city.cpp` `city_process_disorder`, richardpenman/civ2@49f26ec).
 export const getRules: (
   cityGrowthRegistry?: CityGrowthRegistry,
   specialistRegistry?: SpecialistRegistry,
@@ -41,14 +38,15 @@ export const getRules: (
         cityGrowthRegistry.getByCity(city).size() > celebrationMinimumSize
     ),
     new Effect((city: City, yields: Yield[] = city.yields()): boolean => {
-      const cityGrowth = cityGrowthRegistry.getByCity(city),
-        [unhappiness, , happiness] = citizenSummary(
-          calculateCitizenState(cityGrowth, yields, specialistRegistry)
-        );
+      const { happy, unhappy } = stagedHappiness(city, yields, {
+        cityGrowthRegistry,
+        playerGovernmentRegistry,
+        specialistRegistry,
+      });
 
       return (
-        unhappiness === 0 &&
-        Math.floor(happiness) >= celebrationHappy(cityGrowth.size()) &&
+        unhappy === 0 &&
+        happy >= celebrationHappy(cityGrowthRegistry.getByCity(city).size()) &&
         governmentOf(city.player(), playerGovernmentRegistry) !== ANARCHY
       );
     })

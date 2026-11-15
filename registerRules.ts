@@ -1,7 +1,6 @@
 import { Game, defaultGame } from '@civ-clone/core-game';
 import cityCaptured from './Rules/City/captured';
 import cityCelebrateLeader from './Rules/City/celebrate-leader';
-import cityCelebrationYield from './Rules/City/celebration-yield';
 import cityCivilDisorder from './Rules/City/civil-disorder';
 import cityCost from './Rules/City/cost';
 import cityDestroyed from './Rules/City/destroyed';
@@ -17,12 +16,11 @@ export const register = (game: Game): void => {
       game.specialists,
       game.playerGovernments
     ),
-    ...cityCelebrationYield(
-      game.pendingEffects,
-      game.playerGovernments,
-      game.tileImprovements
+    ...cityCivilDisorder(
+      game.cityGrowth,
+      game.specialists,
+      game.playerGovernments
     ),
-    ...cityCivilDisorder(game.cityGrowth, game.specialists),
     ...cityCost(game.playerGovernments, game.units),
     ...cityDestroyed(game.pendingEffects),
     ...cityYield(
@@ -49,7 +47,9 @@ export const register = (game: Game): void => {
       game.playerGovernments,
       game.pendingEffects,
       game.turn,
-      game.clients
+      game.clients,
+      game.cityGrowth,
+      game.cityImprovements
     )
   );
 };

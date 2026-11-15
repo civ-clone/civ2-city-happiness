@@ -191,7 +191,7 @@ describe('city:yield', (): void => {
       reduceYield(yields, Type),
     calls = { indexOf: 0, getByCity: 0 };
 
-  it("makes the citizens past those born content unhappy, up to the city's size", (): void => {
+  it("makes the citizens past those born content unhappy, beyond the city's size too (they're angry)", (): void => {
     expect(total(yieldsOf(cityOf(human)), PopulationUnhappiness)).equal(2);
     expect(
       total(yieldsOf(cityOf(human), { level: 0 }), PopulationUnhappiness)
@@ -205,6 +205,22 @@ describe('city:yield', (): void => {
     expect(total(yieldsOf(cityOf(computer), { level: 0 }), Unhappiness)).equal(
       2
     );
+
+    // Deity with 1 born content: a city of 3, number 7 of 20 under Despotism (limit 4), has 2 born unhappy and
+    //  (20 - 4 + 7 % 4) / 4 = 4 more for the empire's size: 6, 3 of them angry.
+    const city = cityOf(human),
+      cities = [
+        ...new Array(7).fill(0).map(() => cityOf(human)),
+        city,
+        ...new Array(12).fill(0).map(() => cityOf(human)),
+      ];
+
+    expect(
+      total(
+        yieldsOf(city, { level: 5, size: 3, cities }),
+        PopulationUnhappiness
+      )
+    ).equal(6);
   });
 
   it("adds a person's empire size, except under Communism, and never for a computer player", (): void => {
@@ -520,7 +536,7 @@ describe('disorder and celebrating', (): void => {
 
     registry.register(
       ...celebrateLeader(growthRegistry, specialists, governedBy(Current)),
-      ...civilDisorder(growthRegistry, specialists)
+      ...civilDisorder(growthRegistry, specialists, governedBy(Current))
     );
 
     return registry.process(Rule, city, yields).some((result) => result);
