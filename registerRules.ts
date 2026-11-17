@@ -1,4 +1,5 @@
 import { Game, defaultGame } from '@civ-clone/core-game';
+import cityBornContent from './Rules/City/born-content';
 import cityCaptured from './Rules/City/captured';
 import cityCelebrateLeader from './Rules/City/celebrate-leader';
 import cityCivilDisorder from './Rules/City/civil-disorder';
@@ -40,6 +41,13 @@ export const register = (game: Game): void => {
       }
     ),
     ...playerAction(game.cities, game.pendingEffects),
+    ...cityBornContent({
+      cityGrowthRegistry: game.cityGrowth,
+      cityRegistry: game.cities,
+      clientRegistry: game.clients,
+      gameDifficultyRegistry: game.difficulty,
+      playerGovernmentRegistry: game.playerGovernments,
+    }),
     ...playerTurnStart(
       game.cities,
       game.rules,

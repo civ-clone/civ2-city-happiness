@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.register = void 0;
 const core_game_1 = require("@civ-clone/core-game");
+const born_content_1 = require("./Rules/City/born-content");
 const captured_1 = require("./Rules/City/captured");
 const celebrate_leader_1 = require("./Rules/City/celebrate-leader");
 const civil_disorder_1 = require("./Rules/City/civil-disorder");
@@ -16,7 +17,13 @@ const register = (game) => {
         wonderRegistry: game.wonders,
         playerResearchRegistry: game.playerResearch,
         requirementRegistry: game.requirements,
-    }), ...(0, action_1.default)(game.cities, game.pendingEffects), ...(0, turn_start_1.default)(game.cities, game.rules, game.engine, game.playerGovernments, game.pendingEffects, game.turn, game.clients, game.cityGrowth, game.cityImprovements));
+    }), ...(0, action_1.default)(game.cities, game.pendingEffects), ...(0, born_content_1.default)({
+        cityGrowthRegistry: game.cityGrowth,
+        cityRegistry: game.cities,
+        clientRegistry: game.clients,
+        gameDifficultyRegistry: game.difficulty,
+        playerGovernmentRegistry: game.playerGovernments,
+    }), ...(0, turn_start_1.default)(game.cities, game.rules, game.engine, game.playerGovernments, game.pendingEffects, game.turn, game.clients, game.cityGrowth, game.cityImprovements));
 };
 exports.register = register;
 // The plugin loader imports each package for this side effect. Until it passes a `Game` of its own, dropping it would

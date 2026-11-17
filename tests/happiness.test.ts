@@ -48,6 +48,8 @@ import { expect } from 'chai';
 import { reduceYield } from '@civ-clone/core-yield/lib/reduceYields';
 import { unitRole } from '@civ-clone/base-unit-role/Rules/UnitRoles';
 import yieldRules from '../Rules/City/yield';
+import bornContentRules from '../Rules/City/born-content';
+import bornContent from '@civ-clone/base-city-happiness/lib/bornContent';
 import PoliceStation from '@civ-clone/base-city-improvement-policestation/PoliceStation';
 import RequirementRegistry from '@civ-clone/core-requirement/RequirementRegistry';
 import WomensSuffrage from '@civ-clone/base-wonder-womenssuffrage/WomensSuffrage';
@@ -254,6 +256,50 @@ describe('city:yield', (): void => {
         PopulationUnhappiness
       )
     ).equal(2);
+  });
+
+  it("gives the citizens born content, less a person's empire size, as base-city-happiness' `BornContent`", (): void => {
+    const city = cityOf(human),
+      others = new Array(7).fill(0).map(() => cityOf(human)),
+      cities = [...others, city, cityOf(human)],
+      many = [...cities, ...new Array(11).fill(0).map(() => cityOf(human))],
+      contentOf = (
+        target: City,
+        {
+          level = 3,
+          Current = Despotism as typeof Government,
+          all = [] as City[],
+        } = {}
+      ): number | null => {
+        const registry = new RuleRegistry();
+
+        registry.register(
+          ...bornContentRules({
+            cityGrowthRegistry: {
+              getByCity: () => ({ size: () => 5 }),
+            } as any,
+            cityRegistry: {
+              getByPlayer: (player: unknown) =>
+                all.filter((other) => other.player() === player),
+              indexOf: (other: City) => all.indexOf(other),
+            } as any,
+            clientRegistry: playedBy(human),
+            gameDifficultyRegistry: atLevel(level),
+            playerGovernmentRegistry: governedBy(Current),
+          })
+        );
+
+        return bornContent(target, registry);
+      };
+
+    // King: 3 for a person, 1 fewer once the empire tips the city over, none fewer under Communism; a computer player's
+    //  3 on any level. Each is the city's size (5) less the unhappy citizens `city:yield` gives it.
+    expect(contentOf(city)).equal(3);
+    expect(contentOf(city, { all: cities })).equal(2);
+    expect(contentOf(city, { all: many })).equal(1);
+    expect(contentOf(city, { all: many, Current: Communism })).equal(3);
+    expect(contentOf(cityOf(computer), { level: 0 })).equal(3);
+    expect(contentOf(city, { level: 5 })).equal(1);
   });
 
   it('counts a large map, which allows more cities', (): void => {
