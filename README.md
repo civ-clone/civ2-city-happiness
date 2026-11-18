@@ -15,6 +15,8 @@ and military unhappiness tables by government, and the revolution, are civ2-gove
   content. They count among the unhappy for disorder.
 - **Content citizens** (`Rules/City/yield`, `data/happiness`): a person's city has @COSMIC's first unhappy size − 1 −
   level content citizens (6 on Chieftain down to 1 on Deity), a computer player's 3; the rest are born unhappy.
+  `Rules/City/born-content` gives the same count, less a person's empire size, as base-city-happiness' `BornContent`
+  (`lib/content` has both), for a player or its AI to see what one more citizen would be.
 - **Empire size:** a person's city gains `(cities − limit + index % limit) / limit` unhappy citizens, where the limit
   is (government pair + 2) × (riot factor − 2 × level, + 2 on a large map) / 2. None under Communism.
 - **Luxuries** (`Rules/City/cost`): each 2 make a citizen happier.

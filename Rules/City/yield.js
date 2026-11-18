@@ -2,7 +2,6 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getRules = exports.isAggressive = void 0;
 const Roles_1 = require("@civ-clone/base-unit-role/Roles");
-const governments_1 = require("@civ-clone/civ2-rules/data/governments");
 const CityGrowthRegistry_1 = require("@civ-clone/core-city-growth/CityGrowthRegistry");
 const CityRegistry_1 = require("@civ-clone/core-city/CityRegistry");
 const ClientRegistry_1 = require("@civ-clone/core-client/ClientRegistry");
@@ -12,6 +11,7 @@ const RuleRegistry_1 = require("@civ-clone/core-rule/RuleRegistry");
 const TileImprovementRegistry_1 = require("@civ-clone/core-tile-improvement/TileImprovementRegistry");
 const UnitRegistry_1 = require("@civ-clone/core-unit/UnitRegistry");
 const militaryUnhappiness_1 = require("@civ-clone/base-government-military-unhappiness/lib/militaryUnhappiness");
+const content_1 = require("../../lib/content");
 const happiness_1 = require("../../data/happiness");
 const militaryUnhappiness_2 = require("@civ-clone/civ2-government/militaryUnhappiness");
 const Air_1 = require("@civ-clone/base-unit-type-air/Air");
@@ -20,15 +20,11 @@ const Criterion_1 = require("@civ-clone/core-rule/Criterion");
 const Effect_1 = require("@civ-clone/core-rule/Effect");
 const Fortress_1 = require("@civ-clone/base-tile-improvement-fortress/Fortress");
 const Yields_1 = require("../../Yields");
-const government_1 = require("@civ-clone/civ2-city/lib/government");
 const hasImprovementOrWonder_1 = require("@civ-clone/base-wonder/lib/hasImprovementOrWonder");
 const PoliceStation_1 = require("@civ-clone/base-city-improvement-policestation/PoliceStation");
 const WomensSuffrage_1 = require("@civ-clone/base-wonder-womenssuffrage/WomensSuffrage");
 const roleOf_1 = require("@civ-clone/base-unit-role/roleOf");
 const traits_1 = require("@civ-clone/core-unit/traits");
-const isHuman_1 = require("@civ-clone/civ2-difficulty/isHuman");
-const level_1 = require("@civ-clone/civ2-difficulty/level");
-const mapSize_1 = require("@civ-clone/civ2-rules/lib/mapSize");
 /**
  * Whether a unit `city` supports is away making its citizens unhappy, as Civilization II counts it (OpenCiv2
  * `src/auto/city.cpp` `city_calc_unit_support`, richardpenman/civ2@49f26ec): it has an attack, isn't a unit of diplomacy
@@ -57,22 +53,13 @@ const isAggressive = (ruleRegistry, cityRegistry, tileImprovementRegistry) => (u
 };
 exports.isAggressive = isAggressive;
 const getRules = (cityGrowthRegistry = CityGrowthRegistry_1.instance, playerGovernmentRegistry = PlayerGovernmentRegistry_1.instance, unitRegistry = UnitRegistry_1.instance, cityRegistry = CityRegistry_1.instance, gameDifficultyRegistry = GameDifficultyRegistry_1.instance, clientRegistry = ClientRegistry_1.instance, tileImprovementRegistry = TileImprovementRegistry_1.instance, ruleRegistry = RuleRegistry_1.instance, improvementOrWonderRegistries = {}) => {
-    const size = (city) => cityGrowthRegistry.getByCity(city).size(), content = (city) => (0, isHuman_1.default)(city.player(), clientRegistry)
-        ? (0, happiness_1.humanContent)((0, level_1.levelOf)(gameDifficultyRegistry))
-        : happiness_1.computerContent, 
-    // Citizens beyond those born content are born unhappy, and any beyond the city's size are angry (`lib/stagedHappiness`:
-    //  `city_calc_trade_happiness` ~3766 counts them before `city_happy_clamp_stage` splits off the angry ones).
-    bornUnhappy = (city, extra = 0) => Math.max(size(city) - content(city) + extra, 0), 
-    // A person's empire, under any government but Communism (`data/happiness`). A map counts as large by its squares,
-    //  as civ2-rules' `mapSize` has it.
-    empireSize = (city) => {
-        const player = city.player(), government = (0, government_1.default)(player, playerGovernmentRegistry);
-        if (!(0, isHuman_1.default)(player, clientRegistry) || government === governments_1.COMMUNISM) {
-            return 0;
-        }
-        const world = city.tile().map(), limit = (0, happiness_1.empireSizeLimit)(government, (0, level_1.levelOf)(gameDifficultyRegistry), (0, mapSize_1.default)(world.width() * world.height()) === 'large');
-        return (0, happiness_1.empireSizeUnhappiness)(cityRegistry.getByPlayer(player).length, Math.max(cityRegistry.indexOf(city), 0), limit);
-    }, aggressive = (0, exports.isAggressive)(ruleRegistry, cityRegistry, tileImprovementRegistry), 
+    const { bornUnhappy, empireSize } = (0, content_1.default)({
+        cityGrowthRegistry,
+        cityRegistry,
+        clientRegistry,
+        gameDifficultyRegistry,
+        playerGovernmentRegistry,
+    }), aggressive = (0, exports.isAggressive)(ruleRegistry, cityRegistry, tileImprovementRegistry), 
     // Worked out once a `yields()` call: its rules are all given the same `yields` array, while it's being filled. A
     //  caller that passes no array gets it worked out afresh.
     once = (compute) => {

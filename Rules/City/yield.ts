@@ -3,7 +3,6 @@ import {
   DiplomacyRole,
   TradeRole,
 } from '@civ-clone/base-unit-role/Roles';
-import { COMMUNISM } from '@civ-clone/civ2-rules/data/governments';
 import {
   CityGrowthRegistry,
   instance as cityGrowthRegistryInstance,
@@ -41,13 +40,8 @@ import {
   militaryUnhappiness,
   militaryUnhappinessPerUnit,
 } from '@civ-clone/base-government-military-unhappiness/lib/militaryUnhappiness';
-import {
-  computerContent,
-  empireSizeLimit,
-  empireSizeUnhappiness,
-  fortressNearCity,
-  humanContent,
-} from '../../data/happiness';
+import contentCounts from '../../lib/content';
+import { fortressNearCity } from '../../data/happiness';
 import {
   freeAggressiveUnits,
   militaryUnhappinessTable,
@@ -62,7 +56,6 @@ import Fortress from '@civ-clone/base-tile-improvement-fortress/Fortress';
 import { PopulationUnhappiness } from '../../Yields';
 import Unit from '@civ-clone/core-unit/Unit';
 import Yield from '@civ-clone/core-yield/Yield';
-import governmentOf from '@civ-clone/civ2-city/lib/government';
 import {
   ImprovementOrWonderRegistries,
   cityHasImprovementOrWonder,
@@ -71,9 +64,6 @@ import PoliceStation from '@civ-clone/base-city-improvement-policestation/Police
 import WomensSuffrage from '@civ-clone/base-wonder-womenssuffrage/WomensSuffrage';
 import { hasRole } from '@civ-clone/base-unit-role/roleOf';
 import { isA } from '@civ-clone/core-unit/traits';
-import isHuman from '@civ-clone/civ2-difficulty/isHuman';
-import { levelOf } from '@civ-clone/civ2-difficulty/level';
-import mapSize from '@civ-clone/civ2-rules/lib/mapSize';
 
 /**
  * Whether a unit `city` supports is away making its citizens unhappy, as Civilization II counts it (OpenCiv2
@@ -137,39 +127,13 @@ export const getRules: (
   ruleRegistry: RuleRegistry = ruleRegistryInstance,
   improvementOrWonderRegistries: ImprovementOrWonderRegistries = {}
 ): CityYield[] => {
-  const size = (city: City): number =>
-      cityGrowthRegistry.getByCity(city).size(),
-    content = (city: City): number =>
-      isHuman(city.player(), clientRegistry)
-        ? humanContent(levelOf(gameDifficultyRegistry))
-        : computerContent,
-    // Citizens beyond those born content are born unhappy, and any beyond the city's size are angry (`lib/stagedHappiness`:
-    //  `city_calc_trade_happiness` ~3766 counts them before `city_happy_clamp_stage` splits off the angry ones).
-    bornUnhappy = (city: City, extra: number = 0): number =>
-      Math.max(size(city) - content(city) + extra, 0),
-    // A person's empire, under any government but Communism (`data/happiness`). A map counts as large by its squares,
-    //  as civ2-rules' `mapSize` has it.
-    empireSize = (city: City): number => {
-      const player = city.player(),
-        government = governmentOf(player, playerGovernmentRegistry);
-
-      if (!isHuman(player, clientRegistry) || government === COMMUNISM) {
-        return 0;
-      }
-
-      const world = city.tile().map(),
-        limit = empireSizeLimit(
-          government,
-          levelOf(gameDifficultyRegistry),
-          mapSize(world.width() * world.height()) === 'large'
-        );
-
-      return empireSizeUnhappiness(
-        cityRegistry.getByPlayer(player).length,
-        Math.max(cityRegistry.indexOf(city), 0),
-        limit
-      );
-    },
+  const { bornUnhappy, empireSize } = contentCounts({
+      cityGrowthRegistry,
+      cityRegistry,
+      clientRegistry,
+      gameDifficultyRegistry,
+      playerGovernmentRegistry,
+    }),
     aggressive = isAggressive(
       ruleRegistry,
       cityRegistry,
