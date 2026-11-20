@@ -17,6 +17,7 @@ const militaryUnhappiness_2 = require("@civ-clone/civ2-government/militaryUnhapp
 const Air_1 = require("@civ-clone/base-unit-type-air/Air");
 const Yield_1 = require("@civ-clone/core-city/Rules/Yield");
 const Criterion_1 = require("@civ-clone/core-rule/Criterion");
+const Description_1 = require("@civ-clone/core-rule/Description");
 const Effect_1 = require("@civ-clone/core-rule/Effect");
 const Fortress_1 = require("@civ-clone/base-tile-improvement-fortress/Fortress");
 const Yields_1 = require("../../Yields");
@@ -101,6 +102,17 @@ const getRules = (cityGrowthRegistry = CityGrowthRegistry_1.instance, playerGove
         new Yield_1.default('civ2-city-happiness:city/yield/military-unhappiness', new Criterion_1.default((city) => perUnit(city) > 0), new Criterion_1.default((city, yields) => aggressiveOnce(city, yields).size > free(city)), new Effect_1.default((city, yields) => {
             const units = aggressiveOnce(city, yields);
             return (0, militaryUnhappiness_1.militaryUnhappiness)(city, perUnit(city), (unit) => units.has(unit), unitRegistry).slice(free(city));
+        }), 
+        // What a Police Station and Women's Suffrage do, for the Civilopedia (civ-clone/web-renderer#1196).
+        new Description_1.default({
+            type: 'military_unhappiness',
+            subject: PoliceStation_1.default,
+            value: militaryUnhappiness_2.policeStationExemption,
+        }, {
+            type: 'acts_as',
+            subject: WomensSuffrage_1.default,
+            improvement: PoliceStation_1.default,
+            scope: 'player',
         })),
     ];
 };

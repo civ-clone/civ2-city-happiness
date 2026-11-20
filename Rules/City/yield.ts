@@ -51,6 +51,7 @@ import Air from '@civ-clone/base-unit-type-air/Air';
 import City from '@civ-clone/core-city/City';
 import CityYield from '@civ-clone/core-city/Rules/Yield';
 import Criterion from '@civ-clone/core-rule/Criterion';
+import Description from '@civ-clone/core-rule/Description';
 import Effect from '@civ-clone/core-rule/Effect';
 import Fortress from '@civ-clone/base-tile-improvement-fortress/Fortress';
 import { PopulationUnhappiness } from '../../Yields';
@@ -237,7 +238,21 @@ export const getRules: (
           (unit: Unit): boolean => units.has(unit),
           unitRegistry
         ).slice(free(city)) as Yield[];
-      })
+      }),
+      // What a Police Station and Women's Suffrage do, for the Civilopedia (civ-clone/web-renderer#1196).
+      new Description(
+        {
+          type: 'military_unhappiness',
+          subject: PoliceStation,
+          value: policeStationExemption,
+        },
+        {
+          type: 'acts_as',
+          subject: WomensSuffrage,
+          improvement: PoliceStation,
+          scope: 'player',
+        }
+      )
     ),
   ];
 };
