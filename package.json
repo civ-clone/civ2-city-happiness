@@ -1,6 +1,6 @@
 {
   "name": "@civ-clone/civ2-city-happiness",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Civilization II's city happiness: content citizens by level, empire size, martial law, military unhappiness, civil disorder and celebrating, on base-city-happiness.",
   "main": "index.js",
   "repository": "git@github.com:civ-clone/civ2-city-happiness.git",
