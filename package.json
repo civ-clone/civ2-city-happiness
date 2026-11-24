@@ -55,6 +55,7 @@
     "@civ-clone/base-tile-improvement-fortress": "^0.1.0",
     "@civ-clone/base-unit-role": "^0.1.0",
     "@civ-clone/base-unit-type-air": "^0.1.0",
+    "@civ-clone/base-unit-type-land": "^0.1.0",
     "@civ-clone/base-wonder": "^0.1.1",
     "@civ-clone/base-wonder-cureforcancer": "^0.1.0",
     "@civ-clone/base-wonder-hanging-gardens": "^0.1.0",

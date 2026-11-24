@@ -15,6 +15,7 @@ const content_1 = require("../../lib/content");
 const happiness_1 = require("../../data/happiness");
 const militaryUnhappiness_2 = require("@civ-clone/civ2-government/militaryUnhappiness");
 const Air_1 = require("@civ-clone/base-unit-type-air/Air");
+const Land_1 = require("@civ-clone/base-unit-type-land/Land");
 const Yield_1 = require("@civ-clone/core-city/Rules/Yield");
 const Criterion_1 = require("@civ-clone/core-rule/Criterion");
 const Description_1 = require("@civ-clone/core-rule/Description");
@@ -113,6 +114,15 @@ const getRules = (cityGrowthRegistry = CityGrowthRegistry_1.instance, playerGove
             subject: WomensSuffrage_1.default,
             improvement: PoliceStation_1.default,
             scope: 'player',
+        }, 
+        // A Fortress near home (civ-clone/web-renderer#1343): a unit on one closer than `fortressNearCity` to one of
+        //  its player's cities isn't away (`isAggressive`).
+        //  Aircraft are away wherever they are, so only land units: ships can't stand on one.
+        {
+            type: 'not_away',
+            subject: Fortress_1.default,
+            radius: happiness_1.fortressNearCity - 1,
+            unit: Land_1.default,
         })),
     ];
 };
