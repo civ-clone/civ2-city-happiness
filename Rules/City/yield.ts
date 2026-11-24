@@ -48,6 +48,7 @@ import {
   policeStationExemption,
 } from '@civ-clone/civ2-government/militaryUnhappiness';
 import Air from '@civ-clone/base-unit-type-air/Air';
+import Land from '@civ-clone/base-unit-type-land/Land';
 import City from '@civ-clone/core-city/City';
 import CityYield from '@civ-clone/core-city/Rules/Yield';
 import Criterion from '@civ-clone/core-rule/Criterion';
@@ -254,10 +255,12 @@ export const getRules: (
         },
         // A Fortress near home (civ-clone/web-renderer#1343): a unit on one closer than `fortressNearCity` to one of
         //  its player's cities isn't away (`isAggressive`).
+        //  Aircraft are away wherever they are, so only land units: ships can't stand on one.
         {
           type: 'not_away',
           subject: Fortress,
           radius: fortressNearCity - 1,
+          unit: Land,
         }
       )
     ),

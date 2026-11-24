@@ -11,6 +11,7 @@ import yieldRules, { isAggressive } from '../Rules/City/yield';
 import Fortress from '@civ-clone/base-tile-improvement-fortress/Fortress';
 import { fortressNearCity } from '../data/happiness';
 import RuleRegistry from '@civ-clone/core-rule/RuleRegistry';
+import Land from '@civ-clone/base-unit-type-land/Land';
 
 // What a Police Station and Women's Suffrage say they do, for the Civilopedia (civ-clone/web-renderer#1196).
 //  `happiness.test.ts` checks the rule in a city: under Democracy each unit's 2 unhappy become 1 with either.
@@ -50,6 +51,7 @@ describe('descriptions', (): void => {
           type: 'not_away',
           subject: Fortress,
           radius: fortressNearCity - 1,
+          unit: Land,
         },
       ],
     ]);
