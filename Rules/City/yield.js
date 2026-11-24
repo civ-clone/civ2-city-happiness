@@ -113,6 +113,13 @@ const getRules = (cityGrowthRegistry = CityGrowthRegistry_1.instance, playerGove
             subject: WomensSuffrage_1.default,
             improvement: PoliceStation_1.default,
             scope: 'player',
+        }, 
+        // A Fortress near home (civ-clone/web-renderer#1343): a unit on one closer than `fortressNearCity` to one of
+        //  its player's cities isn't away (`isAggressive`).
+        {
+            type: 'not_away',
+            subject: Fortress_1.default,
+            radius: happiness_1.fortressNearCity - 1,
         })),
     ];
 };
